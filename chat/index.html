@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>个人聊天室</title>
+	<style>
+		*{margin: 0;padding: 0;}
+		html,body,#loginbox,#chatbox,#chat{width: 100%;height: 100%;max-height: 100%}
+		#loginbox .lb{
+			padding-top: 50px;
+			text-align: center;
+		}
+		#loginbox .lb p{
+			margin-top: 20px;
+		}
+		#username{
+			padding: 5px;
+			border-radius: 5px;
+			height: 26px;
+			font-size: 16px;
+			outline: none;
+		}
+		#login{
+			display: inline-block;
+			width: 60px;
+			height: 33px;
+			border-radius: 5px;
+			background-color: #2ba245;
+			color: white;
+			border: none;
+			outline: none;
+		}
+		#header{
+			background:#3d3d3d;
+			height: 5%; 
+			width: 100%;
+			font-size:14px;
+		}
+		#header>div{
+			height: 100%;
+			line-height: 100%;
+			color:#fff;
+		}
+		#chat{
+			background-color: #f5f5f5;
+			max-width: 100%;
+			max-height: 100%;
+			overflow: auto;
+		}
+		#message{
+			padding:0 1.5%;
+			max-width: 100%;
+			background-color: #f5f5f5;
+			width: 97%;
+		}
+		#doc{height: 90%;}
+		#onlinecount{text-align: center;}
+		.msg-system{text-align: center;padding: 10px;color: #999;}
+		.my{text-align: right;}
+		section span{
+			display: inline-block;
+			padding: 5px;
+			margin: 10px;
+		}
+		.restCt{background-color: white;}
+		.myCt{background-color: #9eea6a;}
+		.input-box {
+		  	display:-webkit-box;
+			display:-ms-flexbox;
+			display:-moz-box;
+			position:fixed;
+			bottom: 0;
+			padding:8px 0;
+			width:100%;
+			height: 5%;
+			box-shadow:0 0 1px #000;
+			background-color:#f5f5f5;
+		}
+
+		.input-box .input {
+			-webkit-box-flex:1;
+			-ms-flex:1;
+			-moz-box-flex:1;
+			background-color:#f5f5f5;
+			-webkit-box-flex:1;
+			line-height:25px;
+		}
+
+		.input input {
+			margin:0 10px;
+			float: left;
+			padding:0 6px;
+			height:28px;
+			width:93%;
+			font-size:14px;
+			background-color: #f5f5f5;
+		    border: none;
+			border-radius:15px;
+			color:#000;
+			box-shadow:0 0 1px #000;
+			outline: none;
+		}
+
+		.input input[disabled] {
+			background-color:#eee;
+		}
+
+		.input-box button {
+			display: inline-block;
+			background-color: #2ba245;
+			font-size: 15px;
+			float: right;
+			padding: 3px;
+			margin: 0 10px;
+			color: #fff;
+		    border: none;
+			outline: none;
+		}
+
+		/* 设置滚动条的样式 */
+		::-webkit-scrollbar {
+			width:3px;
+		}
+		/* 滚动槽 */
+		::-webkit-scrollbar-track {
+			-webkit-box-shadow:inset006pxrgba(0,0,0,0.3);
+			border-radius:10px;
+		}
+		/* 滚动条滑块 */
+		::-webkit-scrollbar-thumb {
+			border-radius:10px;
+			background:rgba(0,0,0,0.3);
+			-webkit-box-shadow:inset006pxrgba(0,0,0,0.5);
+		}
+		::-webkit-scrollbar-thumb:window-inactive {
+			background:rgba(255,0,0,0.4);
+		}
+	</style>
+</head>
+<body>
+	<div id="loginbox">
+        <div class="lb">
+            <h2>请设置在聊天室的昵称</h2>
+            <p><input type="text" onkeydown="enter(event,'login')" placeholder="请输入昵称" id="username" name="username" /></p>
+			<p><input type="button" id="login" onclick="login();" value="登录"/></p>
+        </div>
+    </div>
+	<div id="chatbox" style="display:none;">
+        <div id="header">
+            <div>
+                <span style="text-align:left;margin-left:10px;">Websocket(socketIo)聊天室</span>
+                <span style="float:right; margin-right:10px;"><span id="showusername"></span> | 
+				<a href="javascript:;" onclick="logout();" style="color:#fff;">退出</a></span>
+            </div>
+        </div>
+        <div id="doc">
+            <div id="chat">
+                <div id="message" class="message">
+					<div id="onlinecount" style="font-size:14px; padding-top:10px; color:#999;">
+					</div>
+                </div>
+            </div>
+        </div>
+        <div class="input-box">
+            <div class="input">
+				<input type="text" maxlength="140" onfocus="tb(this,1);" onblur="tb(this,2);" onkeydown="enter(event,'send')" placeholder="请输入聊天内容，按Enter提交" id="content" name="content">
+            </div>
+            <div class="action">
+                <button type="button" id="mjr_send" onclick="submit();">发送(Enter)</button>
+            </div>
+        </div>
+    </div>
+
+	<script src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript">
+    	setTimeout(function(){document.querySelectorAll("input")[0].focus();},300);
+    	// 输入框获得焦点与失去焦点后的背景色
+    	function tb(t,d){   
+    		var color;
+    		if(d === 1){
+    			color = '#FFFFFF';
+    		}else if(d === 2){
+    			color = '#f5f5f5';
+    		}
+    		t.style.backgroundColor = color;   
+    		document.querySelectorAll(".input-box")[0].style.backgroundColor=color;   
+    		document.querySelectorAll(".input")[0].style.backgroundColor=color;   
+    	} 
+		var userName;
+    	// 点击退出按钮
+		function logout(){
+		    this.socket.disconnect();
+		    var count = index = document.querySelectorAll("section").length;
+		    for (var i = 0; i < count; i++) {
+				document.getElementById("message").removeChild(document.querySelectorAll("section")[0]);
+			}
+			document.getElementById("chatbox").style.display = "none";
+		    document.getElementById("loginbox").style.display = "";
+	    	document.querySelectorAll("input")[0].focus();
+		}
+    	// 点击发送按钮
+		function submit(){
+			var content = document.getElementById("content").value;
+			var tip = document.createElement('section');
+			tip.className = 'system J-mjrlinkWrap J-cutMsg';
+			if(content == ""){
+				alert("不能发空白信息");return;
+			}else{
+			    //消息发送
+			    this.socket.emit('message', {username:userName, content:content});
+		    	document.getElementById("content").value = '';
+			}
+		}
+    	// 点击登录按钮
+		function login(){
+			userName = document.querySelectorAll("input")[0].value;
+			if(userName == ''){	alert("请输入昵称!");return; }
+			var userid = genUid();
+			//客户端要检查浏览器是否支持WebSocket
+		    if(window.WebSocket != undefined) {
+		    	document.getElementById("loginbox").style.display = "none";
+		    	document.getElementById("chatbox").style.display = "";
+				resetSize();
+		    	document.getElementById("content").focus();
+		    	document.getElementById("showusername").innerText = userName;
+		        //连接websocket后端服务器
+			    this.socket = io.connect('ws://localhost:3000');
+			    //告诉服务器端有用户登录
+			    this.socket.emit('login', {userid:userid, username:userName});
+		    	document.querySelectorAll("input")[0].value = '';
+
+			    //监听新用户登录
+			    this.socket.on('login', function(o){
+			    	updateUser(o,'login')
+			    });
+
+			    //监听用户退出
+			    this.socket.on('logout', function(o){
+			    	updateUser(o,'logout')
+			    });
+
+			    //监听消息发送
+			    this.socket.on('message', function(obj){
+			    	var tip = document.createElement('section');
+			    	if(obj.username == userName){
+						tip.className = 'system J-mjrlinkWrap J-cutMsg my';
+						tip.innerHTML = '<span class="myCt">'+obj.content+'</span> 我';
+			    	}else{
+						tip.className = 'system J-mjrlinkWrap J-cutMsg rest';
+						tip.innerHTML = obj.username+' <span class="restCt">'+obj.content+'</span>';
+			    	}
+					document.getElementById("message").appendChild(tip);
+					log();
+					notice(obj.username+":"+obj.content);
+			    });
+		    }else{
+		    	alert("当前浏览器不支持WebSocket");
+		    }
+
+	    	// 用户登录与退出提示
+		    function updateUser(o,action){
+		    	var userhtml = '';
+				var separator = '';
+				for(key in o.onlineUsers) {
+			        if(o.onlineUsers.hasOwnProperty(key)){
+						userhtml += separator+o.onlineUsers[key];
+						separator = '、';
+					}
+			    }
+		    	document.getElementById("onlinecount").innerText = '当前共有 '+o.onlineCount+' 人在线，在线列表：'+userhtml;
+		    	var html = '';
+				html += '<div class="msg-system">';
+				html += o.user.username;
+				html += (action == 'login') ? ' 加入了聊天室' : ' 退出了聊天室';
+				html += '</div>';
+				var section = document.createElement('section');
+				section.className = 'system J-mjrlinkWrap J-cutMsg';
+				section.innerHTML = html;
+				document.getElementById("message").appendChild(section);
+				log();
+				var c;
+				if(action == 'login'){
+					c = ' 加入了聊天室';
+				}else if(action == 'logout'){
+					c = ' 退出了聊天室';
+				}
+				notice(o.user.username + c);
+		    }
+
+	    	// 随机获取用户ID,以后可用用户注册后的用户id来替代
+		    function genUid(){
+				return new Date().getTime()+""+Math.floor(Math.random()*899+100);
+			}
+		}
+    	// 键盘按下确认键
+		function enter(e,action){
+			if(e.which === 13 && action == 'send'){
+				submit();
+			}
+			if(e.which === 13 && action == 'login'){
+				login();
+			}
+		}
+
+    	// 滚动到底部
+		function log(){
+			if(document.getElementById("message").offsetHeight > document.getElementById("chat").offsetHeight){
+				document.getElementById("message").style.paddingBottom = '20px';
+				document.getElementById("chat").scrollTop = document.getElementById("message").offsetHeight-document.getElementById("chat").offsetHeight;
+			}	
+		}
+
+		// 桌面通知
+		function notice(content) {
+			if (!("Notification" in window)) {
+		        alert("该设备不支持 notification");
+		    } else if (Notification.permission === "granted") { // 允许通知
+		        var notification = new Notification("众易聊天室",{
+			        body:content,
+			        icon:"http://www.easyicon.net/api/resizeApi.php?id=569823&size=128"
+			    });
+			    // 通知显示后5秒后关闭
+			    notification.onshow = function() {
+			        setTimeout(function(){
+						notification.close()
+			        },5000);
+			    };
+		    }else if (Notification.permission !== 'denied') { // 用户没有选择是否显示通知，向用户请求许可
+		        Notification.requestPermission(function(permission) {
+		            if (permission === "granted") {
+		                var notification = new Notification("众易聊天室",{
+					        body:content,
+					        icon:"http://www.easyicon.net/api/resizeApi.php?id=569823&size=128"
+					    });
+					    // 通知显示后5秒后关闭
+					    notification.onshow = function() {
+					        setTimeout(function(){
+								notification.close()
+					        },5000);
+					    };
+		            }
+		        });
+		    }
+		    
+		    // 通知显示后点击事件
+		    // notification.onclick = function(){
+		    //     notification.close()
+		    //     window.open("http://127.0.0.1:3000");
+		    // }
+		}
+
+		window.onresize = resetSize;
+    	// 窗口大小发生改变
+		function resetSize(){
+			var h = document.getElementById("header").offsetHeight;
+			document.getElementById("header").querySelectorAll("div")[0].style.lineHeight = h+"px";
+			log();
+		}
+	</script>
+</body>
+</html>

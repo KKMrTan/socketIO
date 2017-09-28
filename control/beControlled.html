@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>beControlled</title>
+	<style>
+		ul,li{list-style: none;}
+		ul{display: none;}
+		li{
+			width: 50px;
+			height: 50px;
+			background-color: #888;
+		}
+		.select{
+			background-color: orange;
+		}
+	</style>
+</head>
+<body>
+	<div>
+		<h2>扫描二维码连接</h2>
+		<img src="" id="qrcodeImg" alt="">
+	</div>
+	<ul>
+		<li class="select"></li>
+		<li></li>
+		<li></li>
+		<li></li>
+		<li></li>
+		<li></li>
+		<li></li>
+		<li></li>
+		<li></li>
+	</ul>
+	<h2>这是被控制端</h2>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+	    function onMessage (msg) {
+	        var qrcodeImg = document.getElementById('qrcodeImg');
+	        // 消息类型为1，初始化连接的时候，服务器端返回连接 id
+	        if(msg.type === 1) {
+	            // 拼接控制方连接，并调用接口生成二维码
+	            qrcodeImg.src = 'http://qr.liantu.com/api.php?text=http://localhost:3000/control.html?id=' + msg.id;
+	        } else if(msg.type === 2){
+	            // 其它类型的消息为控制消息，根据消息做相应的变换
+	            if (msg.selected) {
+		        	document.querySelectorAll('.select')[0].className = '';
+		        	document.querySelectorAll('li')[msg.selected-1].className = 'select';
+	            }
+	        }
+	        else if (msg.type === 3){
+	        	document.querySelectorAll('div')[0].style.display = 'none';
+	        	document.querySelectorAll('ul')[0].style.display = 'block';
+	        }
+	    }
+		//客户端要检查浏览器是否支持WebSocket
+	    if(window.WebSocket != undefined) {
+	        //连接websocket后端服务器
+		    this.socket = io.connect('ws://localhost:3000');
+		    socket.on('connect', function() {
+			    var msg = {
+			    	id: socket.id,
+			    	type: 1
+			    };
+		    	onMessage(msg);
+			});
+		    
+		    //告诉服务器端有用户登录
+		    // this.socket.emit('login', {userid:userid, username:userName});
+
+		    //监听新用户登录
+		    // this.socket.on('login', function(o){
+		    // 	onMessage(o)
+		    // });
+
+		    // //监听连接
+		    this.socket.on('conn', function(o){
+		    	onMessage(o)
+		    });
+
+		    //监听用户退出
+		    this.socket.on('logout', function(o){
+		    });
+
+		    //监听消息发送
+		    this.socket.on('message', function(obj){
+		    	onMessage(obj)
+		    });
+	    }else{
+	    	alert("当前浏览器不支持WebSocket");
+	    }
+	</script>
+</body>
+		

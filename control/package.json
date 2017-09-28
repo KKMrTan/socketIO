@@ -1,0 +1,16 @@
+{
+  "name": "control",
+  "version": "1.0.0",
+  "description": "this is a websocket clien control clien test project",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "KangKang (KKMrTan@hotmail.com)",
+  "license": "ISC",
+  "dependencies": {
+    "express": "*",
+    "socket.io": "^2.0.3",
+    "ws": "*"
+  }
+}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>control</title>
+	<style>
+		ul,li{list-style: none;}
+		li{
+			width: 50px;
+			height: 50px;
+			background-color: #888;
+		}
+		.select{
+			background-color: orange;
+		}
+	</style>
+</head>
+<body>
+	<ul>
+		<li class="select" onclick="checkClick(1)"></li>
+		<li onclick="checkClick(2)"></li>
+		<li onclick="checkClick(3)"></li>
+		<li onclick="checkClick(4)"></li>
+		<li onclick="checkClick(5)"></li>
+		<li onclick="checkClick(6)"></li>
+		<li onclick="checkClick(7)"></li>
+		<li onclick="checkClick(8)"></li>
+		<li onclick="checkClick(9)"></li>
+	</ul>
+	<h2>这是控制端</h2>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+    	var relaId = getQueryString('id')
+
+		//客户端要检查浏览器是否支持WebSocket
+	    if(window.WebSocket != undefined) {
+	        //连接websocket后端服务器
+		    this.socket = io.connect('ws://localhost:3000');
+		    this.socket.emit('conn', {id:relaId});
+		    //监听用户退出
+		    this.socket.on('logout', function(o){
+		    });
+
+	    }else{
+	    	alert("当前浏览器不支持WebSocket");
+	    }
+
+	    function checkClick(selected){
+	    	document.querySelectorAll('.select')[0].className = '';
+        	document.querySelectorAll('li')[selected-1].className = 'select';
+		    this.socket.emit('message', {id:relaId, selected: selected});
+	    }
+
+	    function getQueryString(param){
+			var str = decodeURIComponent(window.location.search).substr(1);
+			str = str.split("&");
+			var paramsArr = [];
+			for(var i=0; i<str.length; i++){
+				var result = getStr(str[i],'=');
+				var data = {
+					key: result.key,
+					value: result.value
+				}
+				paramsArr.push(data);
+			}
+			for(var i = 0; i < paramsArr.length; i++){
+				if(paramsArr[i].key == param){
+					return paramsArr[i].value;
+				}
+			}
+	    }
+	    // 字符串切割数组
+		function getStr(string,str){ 
+		    var key = string.split(str)[0]; 
+		    var value = string.split(str)[1]; 
+		    var rs = [];
+		    rs['key'] = key;
+		    rs['value'] = value;
+		    return rs;
+		} 
+	</script>
+</body>
+</html>

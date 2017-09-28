@@ -1,0 +1,15 @@
+{
+  "name": "app2",
+  "version": "1.0.0",
+  "description": "this is websocket test",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "MrTan(KKMrTan@hotmail.com)",
+  "license": "ISC",
+  "dependencies": {
+    "express": "*",
+    "socket.io": "*"
+  }
+}
